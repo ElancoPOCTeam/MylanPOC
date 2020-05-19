@@ -1,0 +1,13 @@
+{
+	"name": "AzureDevDataLakeStore1",
+	"properties": {
+		"annotations": [],
+		"type": "AzureDataLakeStore",
+		"typeProperties": {
+			"dataLakeStoreUri": "https://devadl1.azuredatalakestore.net/webhdfs/v1",
+			"tenant": "4e7f6ae5-96c0-4848-b39e-4e202fba3cf9",
+			"subscriptionId": "e9bbed01-3ef5-49a2-a647-1afd9d807212",
+			"resourceGroupName": "Elanco-Edna-Dev-Commercial-RG"
+		}
+	}
+}
