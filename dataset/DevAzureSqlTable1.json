@@ -1,0 +1,32 @@
+{
+	"name": "DevAzureSqlTable1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDevSqlDatabase1",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"dev-db": {
+				"type": "string",
+				"defaultValue": "edna-dev-sqldb1"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "emp_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "emp_name",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "Employees"
+		}
+	}
+}

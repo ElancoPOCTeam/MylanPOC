@@ -1,0 +1,12 @@
+{
+	"name": "AzureDevSqlDatabase1",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": "integrated security=False;encrypt=True;connection timeout=30;data source=edna-dev-sqldwh1.database.windows.net;initial catalog=edna-dev-sqldb1;user id=elancoadmin",
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkVETkEtREVWLUFERjFfMjZjOTY1ZGEtMWY5NS00MDIyLWI0ZDctMjhhNjQ4N2QzM2UzIg0KfQ=="
+		}
+	}
+}
