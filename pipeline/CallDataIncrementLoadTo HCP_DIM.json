@@ -1,9 +1,9 @@
 {
-	"name": "pipeline1",
+	"name": "CallDataIncrementLoadTo HCP_DIM",
 	"properties": {
 		"activities": [
 			{
-				"name": "DemoTimeStamp",
+				"name": "dataflow_dim_Increment",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
@@ -16,8 +16,15 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "dataflow_dim_Increment_copy1",
+						"referenceName": "dataflow_dim_Increment",
 						"type": "DataFlowReference"
+					},
+					"staging": {
+						"linkedService": {
+							"referenceName": "AzureBlobStorage_LinkedService",
+							"type": "LinkedServiceReference"
+						},
+						"folderPath": "incrementdatastaging"
 					},
 					"compute": {
 						"coreCount": 8,
@@ -26,6 +33,9 @@
 				}
 			}
 		],
+		"folder": {
+			"name": "Veeva"
+		},
 		"annotations": []
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
