@@ -1,0 +1,1082 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adfMylan"
+		},
+		"SapHana1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'SapHana1'"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/Veeva_Order')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Salesforce1",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Veeva"
+				},
+				"annotations": [],
+				"type": "SalesforceObject",
+				"schema": [],
+				"typeProperties": {
+					"objectApiName": "Order_vod__c"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Veeva_Order_Incremental')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage_LinkedService",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@concat('Order_Incremental_',substring(formatDateTime(utcnow()),0,4),substring(formatDateTime(utcnow()),5,2),substring(formatDateTime(utcnow()),8,2),'.csv')",
+							"type": "Expression"
+						},
+						"folderPath": "Incremental",
+						"container": "veevacontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/calla_targetDatasetDW')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSynapseAnalytics1",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "OneTimeUsage"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [
+					{
+						"name": "PRODUCT",
+						"type": "varchar"
+					},
+					{
+						"name": "TERR_CD",
+						"type": "varchar"
+					},
+					{
+						"name": "CALL_TARGET",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "MONTH_ID",
+						"type": "int",
+						"precision": 10
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "CALLS_TARGET"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/medical')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage_LinkedService",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "OneTimeUsage"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "medical.csv",
+						"folderPath": "OrderData",
+						"container": "data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SapHana1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "SapHana",
+				"typeProperties": {
+					"connectionString": "[parameters('SapHana1_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "integrationRuntime5",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MylanSampledata')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup1",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": false,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "Transactional_dataDataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Lookup1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": false,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "SqlDWSink"
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "EMP_FULL_NM",
+											"type": "String"
+										},
+										"sink": {
+											"name": "EMP_FULL_NM",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "ACCT_TYPE",
+											"type": "String"
+										},
+										"sink": {
+											"name": "ACCT_TYPE",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "LOCATION_ACCT_ID",
+											"type": "String"
+										},
+										"sink": {
+											"name": "LOCATION_ACCT_ID",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "SALES_CALLS_LOCATION_ACCT_ID",
+											"type": "String"
+										},
+										"sink": {
+											"name": "SALES_CALLS_LOCATION_ACCT_ID",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "CALLS_LOCATION_ACCT_ID",
+											"type": "String"
+										},
+										"sink": {
+											"name": "CALLS_LOCATION_ACCT_ID",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "SALES_LOCATION_ACCT_ID",
+											"type": "String"
+										},
+										"sink": {
+											"name": "SALES_LOCATION_ACCT_ID",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "PRODUCT",
+											"type": "String"
+										},
+										"sink": {
+											"name": "PRODUCT",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "PRODUCT_CATEGORY",
+											"type": "String"
+										},
+										"sink": {
+											"name": "PRODUCT_CATEGORY",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "TERR_CD",
+											"type": "String"
+										},
+										"sink": {
+											"name": "TERR_CD",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "TERR_DESC",
+											"type": "String"
+										},
+										"sink": {
+											"name": "TERR_DESC",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "REGN_CD",
+											"type": "String"
+										},
+										"sink": {
+											"name": "REGN_CD",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "REGN_DESC",
+											"type": "String"
+										},
+										"sink": {
+											"name": "REGN_DESC",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "MONTH_ID",
+											"type": "String"
+										},
+										"sink": {
+											"name": "MONTH_ID",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "SEGMENT",
+											"type": "String"
+										},
+										"sink": {
+											"name": "SEGMENT",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "TARGET_CNT",
+											"type": "String"
+										},
+										"sink": {
+											"name": "TARGET_CNT",
+											"type": "Int32"
+										}
+									},
+									{
+										"source": {
+											"name": "REACH_ACCT_ID",
+											"type": "String"
+										},
+										"sink": {
+											"name": "REACH_ACCT_ID",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "TARGET_CALLS",
+											"type": "String"
+										},
+										"sink": {
+											"name": "TARGET_CALLS",
+											"type": "Int32"
+										}
+									},
+									{
+										"source": {
+											"name": "CALLS",
+											"type": "String"
+										},
+										"sink": {
+											"name": "CALLS",
+											"type": "Int32"
+										}
+									},
+									{
+										"source": {
+											"name": "SALES_UNITS",
+											"type": "String"
+										},
+										"sink": {
+											"name": "SALES_UNITS",
+											"type": "Single"
+										}
+									},
+									{
+										"source": {
+											"name": "COACHING_VISITS",
+											"type": "String"
+										},
+										"sink": {
+											"name": "COACHING_VISITS",
+											"type": "Int32"
+										}
+									}
+								]
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "Transactional_dataDataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "Transactional_dataDatasetDW",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Veeva to AzureBlob')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Veeva_MedicalEvents_FullLoad",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SalesforceSource",
+								"readBehavior": "query"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "Veeva_MedicalEvents",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "Veeva_DelimitedText1",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Veeva_Orders_FullLoad",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Veeva_MedicalEvents_FullLoad",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SalesforceSource",
+								"readBehavior": "query"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "Veeva_Order",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "Veeva_DelimitedText1",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"folder": {
+					"name": "Veeva"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Veeva_Order')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Veeva to AzureBlob_Incremental')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Veeva_Orders_Incrm",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SalesforceSource",
+								"query": "select * from Order_vod__c\nwhere CreatedDate>='2015-08-26'",
+								"readBehavior": "query"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "Veeva_Order",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "Veeva_Order_Incremental",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"folder": {
+					"name": "Veeva"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Veeva_Order')]",
+				"[concat(variables('factoryId'), '/datasets/Veeva_Order_Incremental')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SapHana_LIKP')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SapHana1",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "HANA"
+				},
+				"annotations": [],
+				"type": "SapHanaTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "SAPABAP1",
+					"table": "LIKP"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SapHana1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SapHana_LIPS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SapHana1",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "HANA"
+				},
+				"annotations": [],
+				"type": "SapHanaTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "SAPABAP1",
+					"table": "LIPS"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SapHana1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SapHana_VBAK')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SapHana1",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "HANA"
+				},
+				"annotations": [],
+				"type": "SapHanaTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "SAPABAP1",
+					"table": "VBAK"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SapHana1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SapHana_VBAP')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SapHana1",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "HANA"
+				},
+				"annotations": [],
+				"type": "SapHanaTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "SAPABAP1",
+					"table": "VBAP"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SapHana1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow_dim_Increment')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "IncrementCallDataset",
+								"type": "DatasetReference"
+							},
+							"name": "CallIncrementExtract"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureSynapse_HCPDIM",
+								"type": "DatasetReference"
+							},
+							"name": "HCPDIMIncrementLoad"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddDates"
+						},
+						{
+							"name": "ColumnMapping"
+						},
+						{
+							"name": "AlterRow1"
+						}
+					],
+					"script": "source(output(\n\t\tCALL_DATE as string,\n\t\tEMP_ID as string,\n\t\tPROD_ID as string,\n\t\tACCT_ID as string,\n\t\tHCP_ID as string,\n\t\tCALL_DURTN as string,\n\t\tCALL_CMMNT as string,\n\t\tEMP_FNAME as string,\n\t\tEMP_LNAME as string,\n\t\tHCP_FNAME as string,\n\t\tHCP_LNAME as string,\n\t\tHCP_ADDR as string,\n\t\tHCP_CITY as string,\n\t\tHCP_ZIP as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> CallIncrementExtract\nCallIncrementExtract derive(UPDATED_DT = currentUTC(),\n\t\tCREATED_DT = currentUTC()) ~> AddDates\nAddDates select(mapColumn(\n\t\tHCP_ID,\n\t\tHCP_FNAME,\n\t\tHCP_LNAME,\n\t\tHCP_ADDR,\n\t\tHCP_CITY,\n\t\tHCP_ZIP,\n\t\tUPDATED_DT,\n\t\tCREATED_DT\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> ColumnMapping\nColumnMapping alterRow(upsertIf(true())) ~> AlterRow1\nAlterRow1 sink(input(\n\t\tHCP_ID as string,\n\t\tCREATED_DT as timestamp,\n\t\tHCP_FNAME as string,\n\t\tHCP_LNAME as string,\n\t\tHCP_ADDR as string,\n\t\tHCP_CITY as string,\n\t\tHCP_ZIP as string,\n\t\tUPDATED_DT as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:false,\n\tupdateable:false,\n\tupsertable:true,\n\tkeys:['HCP_ID'],\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tHCP_ID,\n\t\tCREATED_DT,\n\t\tHCP_FNAME,\n\t\tHCP_LNAME,\n\t\tHCP_ADDR,\n\t\tHCP_CITY,\n\t\tHCP_ZIP,\n\t\tUPDATED_DT\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> HCPDIMIncrementLoad"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow_dim_Increment_copy1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "IncrementCallDataset",
+								"type": "DatasetReference"
+							},
+							"name": "CallIncrementExtract"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "TestForTimeStamp",
+								"type": "DatasetReference"
+							},
+							"name": "HCPDIMIncrementLoad"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddDates"
+						},
+						{
+							"name": "ColumnMapping"
+						},
+						{
+							"name": "AlterRow1"
+						}
+					],
+					"script": "source(output(\n\t\tCALL_DATE as timestamp 'MM/dd/yyyy HH:mm:ss',\n\t\tEMP_ID as string,\n\t\tPROD_ID as string,\n\t\tACCT_ID as string,\n\t\tHCP_ID as string,\n\t\tCALL_DURTN as string,\n\t\tCALL_CMMNT as string,\n\t\tEMP_FNAME as string,\n\t\tEMP_LNAME as string,\n\t\tHCP_FNAME as string,\n\t\tHCP_LNAME as string,\n\t\tHCP_ADDR as string,\n\t\tHCP_CITY as string,\n\t\tHCP_ZIP as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> CallIncrementExtract\nCallIncrementExtract derive(UPDATED_DT = currentTimestamp(),\n\t\tCREATED_DT = currentTimestamp()) ~> AddDates\nAddDates select(mapColumn(\n\t\tHCP_ID,\n\t\tHCP_FNAME,\n\t\tHCP_LNAME,\n\t\tHCP_ADDR,\n\t\tHCP_CITY,\n\t\tHCP_ZIP,\n\t\tUPDATED_DT,\n\t\tCREATED_DT\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> ColumnMapping\nColumnMapping alterRow(upsertIf(true())) ~> AlterRow1\nAlterRow1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tmapColumn(\n\t\tHCP_ID,\n\t\tCREATED_DT,\n\t\tHCP_FNAME,\n\t\tHCP_LNAME,\n\t\tHCP_ADDR,\n\t\tHCP_CITY,\n\t\tHCP_ZIP,\n\t\tUPDATED_DT\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> HCPDIMIncrementLoad"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow_empdim')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "CallHistoricalDataBlob",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureSynapse_EMPDIM",
+								"type": "DatasetReference"
+							},
+							"name": "HCPDIM"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddDates"
+						},
+						{
+							"name": "Select1"
+						},
+						{
+							"name": "Aggregate1"
+						}
+					],
+					"script": "source(output(\n\t\tCALL_DATE as date 'MM/dd/yyyy',\n\t\tEMP_ID as string,\n\t\tPROD_ID as string,\n\t\tACCT_ID as string,\n\t\tHCP_ID as string,\n\t\tCALL_DURTN as string,\n\t\tCALL_CMMNT as string,\n\t\tEMP_FNAME as string,\n\t\tEMP_LNAME as string,\n\t\tHCP_FNAME as string,\n\t\tHCP_LNAME as string,\n\t\tHCP_ADDR as string,\n\t\tHCP_CITY as string,\n\t\tHCP_ZIP as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> source1\nsource1 derive(UPDATED_DT = currentUTC(),\n\t\tCREATED_DT = currentUTC(),\n\t\tDATA_SRC = upper('MD5')) ~> AddDates\nAddDates select(mapColumn(\n\t\tEMP_ID,\n\t\tEMP_FNAME,\n\t\tEMP_LNAME,\n\t\tUPDATED_DT,\n\t\tCREATED_DT,\n\t\tDATA_SRC\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 aggregate(groupBy(DATA_SRC,\n\t\tEMP_ID,\n\t\tEMP_FNAME,\n\t\tEMP_LNAME),\n\tCREATED_DT = max(CREATED_DT),\n\t\tUPDATED_DT = max(UPDATED_DT)) ~> Aggregate1\nAggregate1 sink(input(\n\t\tDATA_SRC as string,\n\t\tEMP_ID as string,\n\t\tEMP_FNAME as string,\n\t\tEMP_LNAME as string,\n\t\tCREATED_DT as timestamp,\n\t\tUPDATED_DT as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\ttruncate:true,\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tDATA_SRC,\n\t\tEMP_ID,\n\t\tEMP_FNAME,\n\t\tEMP_LNAME,\n\t\tCREATED_DT,\n\t\tUPDATED_DT\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> HCPDIM"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow_fact')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "CallHistoricalDataBlob",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureSynapse_CALLFACT",
+								"type": "DatasetReference"
+							},
+							"name": "HCPFACT"
+						}
+					],
+					"transformations": [
+						{
+							"name": "Select1"
+						}
+					],
+					"script": "source(output(\n\t\tCALL_DATE as date 'MM/dd/yyyy',\n\t\tEMP_ID as string,\n\t\tPROD_ID as string,\n\t\tACCT_ID as string,\n\t\tHCP_ID as string,\n\t\tCALL_DURTN as integer '000',\n\t\tCALL_CMMNT as string,\n\t\tEMP_FNAME as string,\n\t\tEMP_LNAME as string,\n\t\tHCP_FNAME as string,\n\t\tHCP_LNAME as string,\n\t\tHCP_ADDR as string,\n\t\tHCP_CITY as string,\n\t\tHCP_ZIP as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> source1\nsource1 select(mapColumn(\n\t\tCALL_DATE,\n\t\tHCP_ID,\n\t\tCALL_DURTN,\n\t\tCALL_CMMNT,\n\t\tEMP_ID,\n\t\tPROD_ID,\n\t\tACCT_ID\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 sink(input(\n\t\tHCP_ID as string,\n\t\tCALL_DATE as timestamp,\n\t\tCALL_DURTN as integer,\n\t\tCALL_CMMNT as string,\n\t\tEMP_ID as string,\n\t\tACCT_ID as string,\n\t\tPROD_ID as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\ttruncate:true,\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tHCP_ID,\n\t\tCALL_DATE,\n\t\tCALL_DURTN,\n\t\tCALL_CMMNT,\n\t\tEMP_ID,\n\t\tPROD_ID,\n\t\tACCT_ID\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> HCPFACT"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow_hcpdim')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "CallHistoricalDataBlob",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureSynapse_HCPDIM",
+								"type": "DatasetReference"
+							},
+							"name": "HCPDIM"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddDates"
+						},
+						{
+							"name": "Select1"
+						},
+						{
+							"name": "DistinctRows"
+						}
+					],
+					"script": "source(output(\n\t\tCALL_DATE as date 'MM/dd/yyyy',\n\t\tEMP_ID as string,\n\t\tPROD_ID as string,\n\t\tACCT_ID as string,\n\t\tHCP_ID as string,\n\t\tCALL_DURTN as string,\n\t\tCALL_CMMNT as string,\n\t\tEMP_FNAME as string,\n\t\tEMP_LNAME as string,\n\t\tHCP_FNAME as string,\n\t\tHCP_LNAME as string,\n\t\tHCP_ADDR as string,\n\t\tHCP_CITY as string,\n\t\tHCP_ZIP as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> source1\nsource1 derive(UPDATED_DT = currentUTC(),\n\t\tCREATED_DT = currentUTC()) ~> AddDates\nAddDates select(mapColumn(\n\t\tHCP_ID,\n\t\tHCP_FNAME,\n\t\tHCP_LNAME,\n\t\tHCP_ADDR,\n\t\tHCP_CITY,\n\t\tHCP_ZIP,\n\t\tUPDATED_DT,\n\t\tCREATED_DT\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 aggregate(groupBy(HCP_ID,\n\t\tHCP_FNAME,\n\t\tHCP_LNAME,\n\t\tHCP_ADDR,\n\t\tHCP_CITY,\n\t\tHCP_ZIP),\n\tCREATED_DT = max(CREATED_DT),\n\t\tUPDATED_DT = max(UPDATED_DT)) ~> DistinctRows\nDistinctRows sink(input(\n\t\tHCP_ID as string,\n\t\tCREATED_DT as timestamp,\n\t\tHCP_FNAME as string,\n\t\tHCP_LNAME as string,\n\t\tHCP_ADDR as string,\n\t\tHCP_CITY as string,\n\t\tHCP_ZIP as string,\n\t\tUPDATED_DT as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\ttruncate:true,\n\tformat: 'table',\n\tstaged: true,\n\tmapColumn(\n\t\tHCP_ID,\n\t\tCREATED_DT,\n\t\tHCP_FNAME,\n\t\tHCP_LNAME,\n\t\tHCP_ADDR,\n\t\tHCP_CITY,\n\t\tHCP_ZIP,\n\t\tUPDATED_DT\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> HCPDIM"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Call Blob to CALL_FACT')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "dataflow_callfact",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dataflow_fact",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"HCPFACT": {}
+								}
+							},
+							"staging": {
+								"linkedService": {
+									"referenceName": "AzureBlobStorage_LinkedService",
+									"type": "LinkedServiceReference"
+								},
+								"folderPath": "veevacontainer"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					}
+				],
+				"folder": {
+					"name": "Veeva"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/dataflow_fact')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Call Blob to EMP_DIM')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "dataflow_empdim",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dataflow_empdim",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"HCPDIM": {}
+								}
+							},
+							"staging": {
+								"linkedService": {
+									"referenceName": "AzureBlobStorage_LinkedService",
+									"type": "LinkedServiceReference"
+								},
+								"folderPath": "veevacontainer"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					}
+				],
+				"folder": {
+					"name": "Veeva"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/dataflow_empdim')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Call Blob to HCP_DIM')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "dataflow_hcpdim",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dataflow_hcpdim",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"HCPDIM": {}
+								}
+							},
+							"staging": {
+								"linkedService": {
+									"referenceName": "AzureBlobStorage_LinkedService",
+									"type": "LinkedServiceReference"
+								},
+								"folderPath": "veevacontainer"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					}
+				],
+				"folder": {
+					"name": "Veeva"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/dataflow_hcpdim')]"
+			]
+		}
+	]
+}

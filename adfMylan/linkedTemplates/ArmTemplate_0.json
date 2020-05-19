@@ -1,0 +1,696 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adfMylan"
+		},
+		"AzureBlobStorage_LinkedService_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage_LinkedService'"
+		},
+		"AzureDatabricks_LinkedService_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'AzureDatabricks_LinkedService'"
+		},
+		"AzureDevBlobStorage1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureDevBlobStorage1'"
+		},
+		"AzureDevSqlDatabase1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureDevSqlDatabase1'"
+		},
+		"AzureSqlMI1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureSqlMI1'"
+		},
+		"AzureSynapseAnalytics1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureSynapseAnalytics1'"
+		},
+		"Hana_AzureBlobStorage1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'Hana_AzureBlobStorage1'"
+		},
+		"IIGMetadata_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'IIGMetadata'"
+		},
+		"Salesforce1_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'Salesforce1'"
+		},
+		"Salesforce1_securityToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'securityToken' of 'Salesforce1'"
+		},
+		"Veeva_AzureBlobStorage1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'Veeva_AzureBlobStorage1'"
+		},
+		"AzureDevDataLakeStore1_properties_typeProperties_dataLakeStoreUri": {
+			"type": "string",
+			"defaultValue": "https://devadl1.azuredatalakestore.net/webhdfs/v1"
+		},
+		"AzureDevDataLakeStore1_properties_typeProperties_tenant": {
+			"type": "string",
+			"defaultValue": "4e7f6ae5-96c0-4848-b39e-4e202fba3cf9"
+		},
+		"AzureDevDataLakeStore1_properties_typeProperties_subscriptionId": {
+			"type": "string",
+			"defaultValue": "e9bbed01-3ef5-49a2-a647-1afd9d807212"
+		},
+		"AzureDevDataLakeStore1_properties_typeProperties_resourceGroupName": {
+			"type": "string",
+			"defaultValue": "Elanco-Edna-Dev-Commercial-RG"
+		},
+		"Salesforce1_properties_typeProperties_environmentUrl": {
+			"type": "string",
+			"defaultValue": "https://test.salesforce.com/"
+		},
+		"Salesforce1_properties_typeProperties_username": {
+			"type": "string",
+			"defaultValue": "cviewer@veeva.partner5.infosys"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureBlobStorage_LinkedService')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureBlobStorage_LinkedService_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDatabricks_LinkedService')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://eastus2.azuredatabricks.net",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDatabricks_LinkedService_accessToken')]"
+					},
+					"existingClusterId": "0514-061158-nodes976"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDevBlobStorage1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureDevBlobStorage1_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDevDataLakeStore1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDataLakeStore",
+				"typeProperties": {
+					"dataLakeStoreUri": "[parameters('AzureDevDataLakeStore1_properties_typeProperties_dataLakeStoreUri')]",
+					"tenant": "[parameters('AzureDevDataLakeStore1_properties_typeProperties_tenant')]",
+					"subscriptionId": "[parameters('AzureDevDataLakeStore1_properties_typeProperties_subscriptionId')]",
+					"resourceGroupName": "[parameters('AzureDevDataLakeStore1_properties_typeProperties_resourceGroupName')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDevSqlDatabase1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureDevSqlDatabase1_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlMI1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlMI",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureSqlMI1_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSynapseAnalytics1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureSynapseAnalytics1_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Hana_AzureBlobStorage1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('Hana_AzureBlobStorage1_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/IIGMetadata')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('IIGMetadata_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Salesforce1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "Salesforce",
+				"typeProperties": {
+					"environmentUrl": "[parameters('Salesforce1_properties_typeProperties_environmentUrl')]",
+					"username": "[parameters('Salesforce1_properties_typeProperties_username')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('Salesforce1_password')]"
+					},
+					"securityToken": {
+						"type": "SecureString",
+						"value": "[parameters('Salesforce1_securityToken')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Veeva_AzureBlobStorage1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('Veeva_AzureBlobStorage1_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/integrationRuntime5')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Databricks')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Medical_Event Data Quality Check",
+						"type": "DatabricksSparkJar",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"mainClassName": "com.iig.core.DataQualityCheckADF",
+							"parameters": [
+								"2963#19205#1#1#/mnt/veevacontainer"
+							],
+							"libraries": [
+								{
+									"jar": "dbfs:/mnt/data/jars/IIGDQJar.jar"
+								}
+							]
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks_LinkedService",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Order_VOD Data Quality Check",
+						"type": "DatabricksSparkJar",
+						"dependsOn": [
+							{
+								"activity": "Medical_Event Data Quality Check",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"mainClassName": "com.iig.core.DataQualityCheckADF",
+							"parameters": [
+								"2900#19000#1#1#/mnt/veevacontainer"
+							],
+							"libraries": [
+								{
+									"jar": "dbfs:/mnt/data/jars/IIGDQJar.jar"
+								}
+							]
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks_LinkedService",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks_LinkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SapHanaIngestionAndDQ')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "LIPS Data Ingestion",
+						"type": "DatabricksSparkJar",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"mainClassName": "com.iig.core.SapHanaBlobStorageLoader",
+							"parameters": [
+								"4766#31485#1#1#/mnt/data"
+							],
+							"libraries": [
+								{
+									"jar": "dbfs:/mnt/data/jars/iigframework_databricks_adf-0.0.1-SNAPSHOT.jar"
+								}
+							]
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks_LinkedService",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "LIPS Data Quality",
+						"type": "DatabricksSparkJar",
+						"dependsOn": [
+							{
+								"activity": "LIPS Data Ingestion",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"mainClassName": "com.iig.core.DataQualityCheckADF",
+							"parameters": [
+								"4766#31486#1#1#/mnt/hanacontainer"
+							],
+							"libraries": [
+								{
+									"jar": "dbfs:/mnt/data/jars/iigframework_databricks_adf-0.0.1-SNAPSHOT.jar"
+								}
+							]
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks_LinkedService",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks_LinkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSynapse_CALLFACT')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSynapseAnalytics1",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Veeva"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [
+					{
+						"name": "HCP_ID",
+						"type": "varchar"
+					},
+					{
+						"name": "CALL_DATE",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "CALL_DURTN",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "CALL_CMMNT",
+						"type": "varchar"
+					},
+					{
+						"name": "EMP_ID",
+						"type": "varchar"
+					},
+					{
+						"name": "ACCT_ID",
+						"type": "varchar"
+					},
+					{
+						"name": "PROD_ID",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "CALL_FACT"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSynapseAnalytics1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSynapse_EMPDIM')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSynapseAnalytics1",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Veeva"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [
+					{
+						"name": "DATA_SRC",
+						"type": "varchar"
+					},
+					{
+						"name": "EMP_ID",
+						"type": "varchar"
+					},
+					{
+						"name": "EMP_FNAME",
+						"type": "varchar"
+					},
+					{
+						"name": "EMP_LNAME",
+						"type": "varchar"
+					},
+					{
+						"name": "CREATED_DT",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "UPDATED_DT",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "EMP_DIM"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSynapseAnalytics1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSynapse_HCPDIM')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSynapseAnalytics1",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Veeva"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [
+					{
+						"name": "HCP_ID",
+						"type": "varchar"
+					},
+					{
+						"name": "CREATED_DT",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "HCP_FNAME",
+						"type": "varchar"
+					},
+					{
+						"name": "HCP_LNAME",
+						"type": "varchar"
+					},
+					{
+						"name": "HCP_ADDR",
+						"type": "varchar"
+					},
+					{
+						"name": "HCP_CITY",
+						"type": "varchar"
+					},
+					{
+						"name": "HCP_ZIP",
+						"type": "varchar"
+					},
+					{
+						"name": "UPDATED_DT",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "HCP_DIM"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSynapseAnalytics1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Binarydataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage_LinkedService",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "OneTimeUsage"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "BRAND.csv",
+						"container": "mylansampledata"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "PRODUCT",
+						"type": "String"
+					},
+					{
+						"name": "PRODUCT_CATEGORY",
+						"type": "String"
+					},
+					{
+						"name": "BRAND",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage_LinkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Blob_LIKP')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Hana_AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "HANA"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@concat('LIKP_',substring(formatDateTime(utcnow()),0,4),substring(formatDateTime(utcnow()),5,2),substring(formatDateTime(utcnow()),8,2),'.csv')",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "LIKP",
+							"type": "Expression"
+						},
+						"container": "hanacontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Hana_AzureBlobStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Blob_LIPS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Hana_AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "HANA"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@concat('LIPS_',substring(formatDateTime(utcnow()),0,4),substring(formatDateTime(utcnow()),5,2),substring(formatDateTime(utcnow()),8,2),'.csv')",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "LIPS",
+							"type": "Expression"
+						},
+						"container": "hanacontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Hana_AzureBlobStorage1')]"
+			]
+		}
+	]
+}

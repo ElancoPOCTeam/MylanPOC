@@ -1,0 +1,69 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adfMylan"
+		},
+		"AzureBlobStorage_LinkedService_connectionString": {
+			"value": ""
+		},
+		"AzureDatabricks_LinkedService_accessToken": {
+			"value": ""
+		},
+		"AzureDevBlobStorage1_connectionString": {
+			"value": ""
+		},
+		"AzureDevSqlDatabase1_connectionString": {
+			"value": ""
+		},
+		"AzureSqlMI1_connectionString": {
+			"value": ""
+		},
+		"AzureSynapseAnalytics1_connectionString": {
+			"value": ""
+		},
+		"Hana_AzureBlobStorage1_connectionString": {
+			"value": ""
+		},
+		"IIGMetadata_connectionString": {
+			"value": ""
+		},
+		"Salesforce1_password": {
+			"value": ""
+		},
+		"Salesforce1_securityToken": {
+			"value": ""
+		},
+		"SapHana1_connectionString": {
+			"value": ""
+		},
+		"Veeva_AzureBlobStorage1_connectionString": {
+			"value": ""
+		},
+		"AzureDevDataLakeStore1_properties_typeProperties_dataLakeStoreUri": {
+			"value": "https://devadl1.azuredatalakestore.net/webhdfs/v1"
+		},
+		"AzureDevDataLakeStore1_properties_typeProperties_tenant": {
+			"value": "4e7f6ae5-96c0-4848-b39e-4e202fba3cf9"
+		},
+		"AzureDevDataLakeStore1_properties_typeProperties_subscriptionId": {
+			"value": "e9bbed01-3ef5-49a2-a647-1afd9d807212"
+		},
+		"AzureDevDataLakeStore1_properties_typeProperties_resourceGroupName": {
+			"value": "Elanco-Edna-Dev-Commercial-RG"
+		},
+		"Salesforce1_properties_typeProperties_environmentUrl": {
+			"value": "https://test.salesforce.com/"
+		},
+		"Salesforce1_properties_typeProperties_username": {
+			"value": "cviewer@veeva.partner5.infosys"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
